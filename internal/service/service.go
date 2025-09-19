@@ -19,11 +19,7 @@ func isMorseCode(s string) bool {
 		return false
 	}
 
-	for _, char := range s {
-		if char != '-' && char != ' ' && char != '.' {
-			return false
-		}
-	}
-
-	return true
+	return strings.ContainsFunc(s, func(r rune) bool {
+		return r == '-' || r == ' ' || r == '.'
+	})
 }

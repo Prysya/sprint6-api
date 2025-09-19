@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -22,20 +23,15 @@ func HTMLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	htmlFile, err := os.Open("index.html")
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-	defer htmlFile.Close()
-
-	if _, err = io.Copy(w, htmlFile); err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	http.ServeFile(w, r, "./index.html")
 }
 
 func FormHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 	err := r.ParseMultipartForm(maxUploadSize)
 	if err != nil {
 		http.Error(w, "Error parsing form", http.StatusBadRequest)
@@ -87,6 +83,9 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(convertedString))
+	if _, handlerErr := w.Write([]byte(convertedString)); handlerErr != nil {
+		log.Printf("Error writing response: %v", handlerErr)
+	}
 }
